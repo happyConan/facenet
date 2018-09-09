@@ -46,12 +46,11 @@ from six.moves import xrange  # @UnresolvedImport
 def main(args):
   
     network = importlib.import_module(args.model_def)
-
     subdir = datetime.strftime(datetime.now(), '%Y%m%d-%H%M%S')
-    log_dir = os.path.join(os.path.expanduser(args.logs_base_dir), subdir)
+    log_dir = os.path.join(args.logs_base_dir, subdir)
     if not os.path.isdir(log_dir):  # Create the log directory if it doesn't exist
         os.makedirs(log_dir)
-    model_dir = os.path.join(os.path.expanduser(args.models_base_dir), subdir)
+    model_dir = os.path.join(args.models_base_dir, subdir)
     if not os.path.isdir(model_dir):  # Create the model directory if it doesn't exist
         os.makedirs(model_dir)
 
@@ -73,9 +72,9 @@ def main(args):
     if args.lfw_dir:
         print('LFW directory: %s' % args.lfw_dir)
         # Read the file containing the pairs used for testing
-        pairs = lfw.read_pairs(os.path.expanduser(args.lfw_pairs))
+        pairs = lfw.read_pairs(args.lfw_pairs)
         # Get the paths for the corresponding images
-        lfw_paths, actual_issame = lfw.get_paths(os.path.expanduser(args.lfw_dir), pairs)
+        lfw_paths, actual_issame = lfw.get_paths(args.lfw_dir, pairs)
         
     
     with tf.Graph().as_default():
@@ -84,7 +83,7 @@ def main(args):
 
         # Placeholder for the learning rate
         learning_rate_placeholder = tf.placeholder(tf.float32, name='learning_rate')
-        
+
         batch_size_placeholder = tf.placeholder(tf.int32, name='batch_size')
         
         phase_train_placeholder = tf.placeholder(tf.bool, name='phase_train')
@@ -419,22 +418,22 @@ def parse_arguments(argv):
     parser = argparse.ArgumentParser()
     
     parser.add_argument('--logs_base_dir', type=str, 
-        help='Directory where to write event logs.', default='~/logs/facenet')
+        help='Directory where to write event logs.', default='logs/facenet')
     parser.add_argument('--models_base_dir', type=str,
-        help='Directory where to write trained models and checkpoints.', default='~/models/facenet')
+        help='Directory where to write trained models and checkpoints.', default='models/')
     parser.add_argument('--gpu_memory_fraction', type=float,
         help='Upper bound on the amount of GPU memory that will be used by the process.', default=1.0)
     parser.add_argument('--pretrained_model', type=str,
-        help='Load a pretrained model before training starts.')
+        help='Load a pretrained model before training starts.',default=None)
     parser.add_argument('--data_dir', type=str,
         help='Path to the data directory containing aligned face patches.',
-        default='~/datasets/casia/casia_maxpy_mtcnnalign_182_160')
+        default='../lfw/lfw1')
     parser.add_argument('--model_def', type=str,
         help='Model definition. Points to a module containing the definition of the inference graph.', default='models.inception_resnet_v1')
     parser.add_argument('--max_nrof_epochs', type=int,
-        help='Number of epochs to run.', default=500)
+        help='Number of epochs to run.', default=5)
     parser.add_argument('--batch_size', type=int,
-        help='Number of images to process in a batch.', default=90)
+        help='Number of images to process in a batch.', default=6)
     parser.add_argument('--image_size', type=int,
         help='Image size (height, width) in pixels.', default=160)
     parser.add_argument('--people_per_batch', type=int,
@@ -442,7 +441,7 @@ def parse_arguments(argv):
     parser.add_argument('--images_per_person', type=int,
         help='Number of images per person.', default=40)
     parser.add_argument('--epoch_size', type=int,
-        help='Number of batches per epoch.', default=1000)
+        help='Number of batches per epoch.', default=10)
     parser.add_argument('--alpha', type=float,
         help='Positive to negative triplet distance margin.', default=0.2)
     parser.add_argument('--embedding_size', type=int,
@@ -474,9 +473,9 @@ def parse_arguments(argv):
 
     # Parameters for validation on LFW
     parser.add_argument('--lfw_pairs', type=str,
-        help='The file containing the pairs to use for validation.', default='data/pairs.txt')
+        help='The file containing the pairs to use for validation.', default='../data/pairs.txt')
     parser.add_argument('--lfw_dir', type=str,
-        help='Path to the data directory containing aligned face patches.', default='')
+        help='Path to the data directory containing aligned face patches.', default='../lfw/lfw1')
     parser.add_argument('--lfw_nrof_folds', type=int,
         help='Number of folds to use for cross validation. Mainly used for testing.', default=10)
     return parser.parse_args(argv)
